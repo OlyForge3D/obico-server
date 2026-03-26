@@ -8,6 +8,8 @@ To build the runtime `ml_api` image from your fork, run from the repository root
 docker build -t olyforge3d/ml_api:timeout-tuned ./ml_api
 ```
 
+The runtime Dockerfile downloads model weights during the build with `wget`. That is intentional: the published `thespaghettidetective/ml_api_base:*` images already include `wget`, while they do not consistently include `curl`.
+
 To validate it locally with the compose stack:
 
 ```bash

@@ -9,6 +9,6 @@ RUN pip install -r requirements.txt
 
 RUN mkdir -p /model_cache/ml_api/darknet /model_cache/ml_api/onnx \
  && echo 'Downloading the latest failure detection AI model in Darknet format...' \
- && curl -o /model_cache/ml_api/darknet/model-weights.darknet $(cat model/model-weights.darknet.url | tr -d '\r') \
+ && wget -O /model_cache/ml_api/darknet/model-weights.darknet "$(tr -d '\r' < model/model-weights.darknet.url)" \
  && echo 'Downloading the latest failure detection AI model in ONNX format...' \
- && curl -o /model_cache/ml_api/onnx/model-weights.onnx $(cat model/model-weights.onnx.url | tr -d '\r')
+ && wget -O /model_cache/ml_api/onnx/model-weights.onnx "$(tr -d '\r' < model/model-weights.onnx.url)"
