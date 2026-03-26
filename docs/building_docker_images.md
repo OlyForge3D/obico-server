@@ -1,7 +1,22 @@
 ## Building ML backend images
-To build images, you can use provided [build_images.sh](ml_api/scripts/build_images.sh) script.
-It executes `docker` to build images, assign them tags and push into docker registry.
-Script should be run from `ml_api` directory;
+The repo currently includes `ml_api/scripts/build_base_images.sh` for publishing the
+architecture-specific `ml_api_base` images used by the runtime image.
+
+To build the runtime `ml_api` image from your fork, run from the repository root:
+
+```bash
+docker build -t olyforge3d/ml_api:timeout-tuned ./ml_api
+```
+
+To validate it locally with the compose stack:
+
+```bash
+ML_API_CONNECT_TIMEOUT_SECONDS=0.5 docker compose build ml_api
+ML_API_CONNECT_TIMEOUT_SECONDS=0.5 docker compose up -d ml_api
+```
+
+If you also need to publish refreshed base images, `build_base_images.sh` executes `docker`
+to build, tag, and push them. The script should be run from the `ml_api` directory.
 
 Arguments:
 * -v VERSION argument should contain version number, like 1.3 or similar. It can also be `latest`

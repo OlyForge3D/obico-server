@@ -37,6 +37,37 @@ model_dir = path.join(path.dirname(path.realpath(__file__)), 'model')
 net_main = load_net(path.join(model_dir, 'model.cfg'), path.join(model_dir, 'model.meta'))
 
 
+def _get_float_env(name, default):
+    raw_value = environ.get(name)
+    if raw_value in (None, ''):
+        return default
+
+    try:
+        value = float(raw_value)
+    except ValueError:
+        app.logger.warning('Invalid %s=%s, falling back to %s', name, raw_value, default)
+        return default
+
+    if value <= 0:
+        app.logger.warning('%s must be greater than 0, falling back to %s', name, default)
+        return default
+
+    return value
+
+
+DEFAULT_CONNECT_TIMEOUT_SECONDS = _get_float_env('ML_API_CONNECT_TIMEOUT_SECONDS', 0.5)
+DEFAULT_READ_TIMEOUT_SECONDS = _get_float_env('ML_API_READ_TIMEOUT_SECONDS', 5)
+GCS_CONNECT_TIMEOUT_SECONDS = _get_float_env('ML_API_GCS_CONNECT_TIMEOUT_SECONDS', 10)
+GCS_READ_TIMEOUT_SECONDS = _get_float_env('ML_API_GCS_READ_TIMEOUT_SECONDS', 30)
+
+
+def _get_request_timeout(image_url):
+    if 'storage.googleapis.com' in image_url:
+        return (GCS_CONNECT_TIMEOUT_SECONDS, GCS_READ_TIMEOUT_SECONDS)
+
+    return (DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_READ_TIMEOUT_SECONDS)
+
+
 def _should_retry(exc):
     """Only retry on HTTP 5xx server errors."""
     if isinstance(exc, HTTPError) and exc.response is not None:
@@ -62,12 +93,7 @@ def _get_with_retry(url, timeout, stream=True):
 def get_p():
     if 'img' in request.args:
         try:
-            # Use longer timeout for Google Cloud Storage as it's slower
-            if 'storage.googleapis.com' in request.args['img']:
-                timeout = (10, 30)  # 10s connection, 30s read
-            else:
-                timeout = (0.1, 5)  # 0.1s connection, 5s read
-
+            timeout = _get_request_timeout(request.args['img'])
             resp = _get_with_retry(request.args['img'], timeout, stream=True)
             img_array = np.array(bytearray(resp.content), dtype=np.uint8)
             img = cv2.imdecode(img_array, -1)

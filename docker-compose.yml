@@ -57,6 +57,10 @@ services:
     environment:
       DEBUG: 'True'
       FLASK_APP: 'server.py'
+      ML_API_CONNECT_TIMEOUT_SECONDS: '${ML_API_CONNECT_TIMEOUT_SECONDS-0.5}'
+      ML_API_READ_TIMEOUT_SECONDS: '${ML_API_READ_TIMEOUT_SECONDS-5}'
+      ML_API_GCS_CONNECT_TIMEOUT_SECONDS: '${ML_API_GCS_CONNECT_TIMEOUT_SECONDS-10}'
+      ML_API_GCS_READ_TIMEOUT_SECONDS: '${ML_API_GCS_READ_TIMEOUT_SECONDS-30}'
       # ML_API_TOKEN:
     tty: true
     command: bash -c "gunicorn --bind 0.0.0.0:3333 --workers 1 wsgi"

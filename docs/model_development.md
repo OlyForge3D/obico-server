@@ -16,6 +16,13 @@ Darknet itself is a C-based framework that compiles to a [shared library](https:
 
 The model is set up and hosted via `server.py`, which provides a `/p/?img=...` URL endpoint on port `3333` of the `ml_api` container.
 
+Snapshot fetch timeouts are configurable through environment variables so self-hosted deployments can tolerate slower camera endpoints:
+
+- `ML_API_CONNECT_TIMEOUT_SECONDS` (default `0.5`)
+- `ML_API_READ_TIMEOUT_SECONDS` (default `5`)
+- `ML_API_GCS_CONNECT_TIMEOUT_SECONDS` (default `10`)
+- `ML_API_GCS_READ_TIMEOUT_SECONDS` (default `30`)
+
 When passed an image URL, the server:
 
 1. Fetches the image and converts it to an OpenCV image object
@@ -42,6 +49,12 @@ To build the main image locally:
 docker-compose build ml_api
 ```
 
+To produce a tagged image for your own registry or organization:
+
+```
+docker build -t olyforge3d/ml_api:timeout-tuned ./ml_api
+```
+
 You can use the usual `docker-compose up` command to launch the whole ensemble including web and task containers, but the web container in particular takes several minutes to initialize.
 
 For rapid development, it's faster to launch `ml_api` on its own, mounting the local directory and exposing the web port:
@@ -51,6 +64,14 @@ docker-compose run --service-ports --volume=./ml_api:/app ml_api /bin/bash
 
 # Run this command when the container starts, and re-run it whenever you make a code change
 gunicorn --bind 0.0.0.0:3333 --workers 1 wsgi
+```
+
+If your camera endpoint is a little slow to accept TCP connections, set higher timeouts before launching:
+
+```
+export ML_API_CONNECT_TIMEOUT_SECONDS=0.5
+export ML_API_READ_TIMEOUT_SECONDS=5
+docker-compose up -d ml_api
 ```
 
 When you see `Loaded - names_list: model/names, classes = 1` in the logs, the model server should be ready.
